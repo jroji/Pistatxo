@@ -12,11 +12,11 @@ Pistachio = (() => {
   };
 
   const _HTMLparser = (htmlContent) => {
-    let regex = /{{/gi, result, bindings = [];
+    let regex = /{{.+}}/gi, result, bindings = [];
     while ( (result = regex.exec(htmlContent)) ) {
       bindings.push({
         index: result.index,
-        property: htmlContent.substring(result.index + 2, htmlContent.indexOf('}}'))
+        property: result[0].replace('{{','').replace('}}','')
       });
     };
     _insertHTML(htmlContent, bindings);

@@ -1,4 +1,3 @@
-console.log(Pistachio)
 Pistachio.component({
   template: '/main.template.html',
   bindings: {
