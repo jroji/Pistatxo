@@ -2,13 +2,13 @@
 Pistachio = (() => {
 
   let _bindings = {};
-  let id = "body";
+  let _id = "body";
 
   const _insertHTML = (htmlContent, bindings) => {
     bindings.forEach(d => {
       htmlContent = htmlContent.replace('{{' + d.property +'}}', _bindings[d.property].value);
     });
-    document.querySelector(id).innerHTML = htmlContent;
+    document.querySelector(_id).innerHTML = htmlContent;
   };
 
   const _HTMLparser = (htmlContent) => {
@@ -30,6 +30,8 @@ Pistachio = (() => {
     };
 
     _bindings = properties.bindings;
+    _id = properties.id;
+
     fetch(properties.template, _headers).then( template => {
       template.blob().then(response => {
         var reader = new FileReader();
