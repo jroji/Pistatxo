@@ -2,13 +2,13 @@
 
 var pistachio = new Pistachio({
   id: 'app-test',
-  template: '/main.template.html',
+  template: '/secondary.template.html',
   bindings: {
-    'name': {
-      value: 'Perro'
+    'title': {
+      value: 'Cabecera'
     },
-    'test': {
-      value: 'Compañero'
+    'subtitle': {
+      value: 'Probando distintas cab'
     }
   }
 });

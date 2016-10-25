@@ -8,7 +8,10 @@ class Pistachio {
       }
     };
 
-    const _HTMLparser = (htmlContent) => {
+    /**
+     * parse the html content, identifying the bindings positions and vars
+     */
+    const _HTMLparser = (htmlContent, properties) => {
       let regex = /{{.+}}/gi, result, bindings = [];
       while ( (result = regex.exec(htmlContent)) ) {
         bindings.push({
@@ -16,56 +19,68 @@ class Pistachio {
           property: result[0].replace('{{','').replace('}}','')
         });
       };
-      _insertHTML(htmlContent, bindings);
+      return _insertHTML(htmlContent, bindings, properties);
     };
 
-    const _insertHTML = (htmlContent, bindings) => {
+    /**
+     * replace the bindings syntax and define the new component
+     */
+    const _insertHTML = (htmlContent, bindings, props) => {
       bindings.forEach(d => {
-        htmlContent = htmlContent.replace('{{' + d.property +'}}', this._bindings[d.property].value);
+        htmlContent = htmlContent.replace('{{' + d.property +'}}', props[d.property].value);
       });
-      _defineComponent(htmlContent, this._properties);
+      return htmlContent;
     };
 
-    const _getTemplate = (properties) => {
-      fetch(properties.template, _fetchOptions).then(template => {
+    /**
+     * fetch the template from properties.url and call_HTMLparser function
+     */
+    const _getTemplate = (template) => {
+      var reader = new FileReader();
+      fetch(template, _fetchOptions).then(template => {
         template.blob().then(response => {
-          var reader = new FileReader();
-          reader.onloadend = () => {
-            _HTMLparser(reader.result);
-          }
           reader.readAsBinaryString(response);
         });
       });
+      return reader;
     }
 
-    const _defineComponent = (content, properties) => {
-
+    /**
+     * Create and define the custom element using the specified properties
+     */
       customElements.define(properties.id,
 
         class extends HTMLElement{
           constructor() {
             super();
 
-            //this.shadowMode = properties.shadowMode || 'open';
-            //this.template = properties.template;
+            this.properties = {};
 
-            // Create a shadow root
-            let shadow = this.attachShadow({mode: 'open'});
+            Object.assign(this.properties, properties.bindings);
 
-            let div = document.createElement('div');
-            div.innerHTML = content;
-            let element = div.firstChild;
+            Object.keys(this.properties).forEach((element) => {
+              var data = this.getAttribute(element);
+              if( data != null ) {
+                this.properties[element].value = data;
+              }
+            });
 
-            // Add the link to the shadow root.
-            shadow.appendChild(element);
+             var x = _getTemplate(properties.template);
+
+            x.onloadend = () => {
+              var content = _HTMLparser(x.result, this.properties);
+              // Create a shadow root
+              let shadow = this.attachShadow({mode: this.properties.shadowMode || 'open'});
+
+              let div = document.createElement('div');
+              div.innerHTML = content;
+              let element = div.firstChild;
+
+              // Add the html content to the shadow root.
+              shadow.appendChild(element);
+            }
           }
+
         });
     }
-
-    this._HTMLcontent;
-    this._properties = properties;
-    this._bindings = properties.bindings;
-    _getTemplate(properties);
-
-  }
 }
