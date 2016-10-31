@@ -10,5 +10,10 @@ var pistachio = new Pistachio({
     'subtitle': {
       value: 'Probando distintas cab'
     }
+  },
+  pipes:{
+    changeString: function (x) {
+      return x + "HOLA";
+    }
   }
 });
