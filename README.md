@@ -1,4 +1,7 @@
-# pistachio
+# pistachio 
+
+![alt text](https://s13.postimg.org/p2juoo44n/pista.png)
+
 
 Custom Web Components library based on Custom Elements and Shadow Dom standards.
 
