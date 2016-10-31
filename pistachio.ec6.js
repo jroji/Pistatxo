@@ -112,11 +112,10 @@ class Pistachio {
               /**
                * TODO: Replace with template tag
                */
-              let div = document.createElement('div');
-              div.innerHTML = content;
-              let element = div.firstChild;
+              let template = document.createElement('template');
+              template.innerHTML = content;
               // Add the html content to the shadow root.
-              shadow.appendChild(element);
+              shadow.appendChild(template.content);
 
             }
           }
