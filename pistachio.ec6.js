@@ -4,17 +4,15 @@ class Pistachio {
 
     this._DOM = {};
 
-    const _fetchOptions= {
-      headers: {
-        "Content-Type": "text/plain"
-      }
-    };
-
     const _parseNode = (array, element, level = 0) => {
+
       let attributes = [];
 
       for(let attr of element.attributes) {
-        attributes.push({attr: attr.name, value: attr.nodeValue});
+        attributes.push({
+          attr: attr.name,
+          value: attr.nodeValue
+        });
       }
 
       array.push({
@@ -27,7 +25,7 @@ class Pistachio {
 
       if(element.children.length != 0) {
         for(let child of element.children){
-          _parseNode(array[array.length - 1].children, child, level + 1);
+          _parseNode(array[array.length - 1].children, child, level++);
         }
       }
     };
@@ -48,6 +46,9 @@ class Pistachio {
 
     };
 
+    /**
+     * replace the bindings syntax using defined pipes
+     */
     const _replaceBindings = (a, properties, pipes) => {
 
       let result = a.replace('{{','').replace('}}','');
@@ -64,7 +65,7 @@ class Pistachio {
 
       const _insertNode = (template, elem)=> {
         let element = document.createElement(elem.tag);
-        elem.attr.forEach( (attr) => element.setAttribute(attr.attr, attr.value));
+        elem.attr.forEach( (attr) => element.setAttribute(attr.attr, attr.value.replace(/{{.+}}/gi, a => _replaceBindings(a,properties, pipes))));
 
         template.appendChild(element);
         if(elem.children.length > 0) {
@@ -79,28 +80,7 @@ class Pistachio {
       _insertNode(template.content, DOM[0]);
 
       return template;
-
-
     }
-    /**
-     * replace the bindings syntax and define the new component
-     */
-
-    const _insertHTML = (htmlContent, bindings, props, pipes) => {
-
-      htmlContent = htmlContent.replace(/{{.+}}/gi, (a) => {
-
-        let result = a.replace('{{','').replace('}}','');
-        result = result.split('|');
-
-        let pipe = result[1] ? pipes[result[1].trim()] : null;
-        let value = props[result[0].trim()].value;
-
-        return pipe ? pipe(value) : value;
-      });
-
-      return htmlContent;
-    };
 
     /**
      * Fetch the template from properties.url and call_HTMLparser function
@@ -108,7 +88,7 @@ class Pistachio {
     const _getTemplate = (template) => {
 
       let reader = new FileReader();
-      fetch(template, _fetchOptions).then(template => {
+      fetch(template).then(template => {
         template.blob().then(response => {
           reader.readAsBinaryString(response);
         });
@@ -139,25 +119,34 @@ class Pistachio {
 
             templateReader.onloadend = () => {
               var content = _HTMLparser(templateReader.result, this.properties, this.pipes);
-              // Create a shadow root
+              /** Create a shadow root **/
               let shadow = this.attachShadow({mode: this.properties.shadowMode || 'open'});
-              // Add the html content to the shadow root.
+              /** Add the html content to the shadow root.**/
               shadow.appendChild(content.content);
             }
 
           }
 
-         static get observedAttributes() { return Object.keys(properties.properties); }
-
-          connectedCallback(){
-            this.connectedCallback();
-          };
+          /** Define observedAttributes by defined properties **/
+          static get observedAttributes() { return Object.keys(properties.properties); }
 
           attributeChangedCallback(attr, oldValue, newValue) {
             /** TODO: CHANGE DETECTION LISTENER **/
             console.info("attr changed => ", attr, newValue);
           }
 
+          /** Overwrite lifecycle events with developer custom functions **/
+          disconnectedCallback(){
+            this.disconnectedCallback;
+          };
+
+          connectedCallback(){
+            this.connectedCallback();
+          };
+
+          adoptedCallback(oldDocument, newDocument){
+            this.adoptedCallback(oldDocument, newDocument);
+          };
         });
     }
 }

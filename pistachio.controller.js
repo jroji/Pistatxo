@@ -4,9 +4,7 @@ var pistachio = new Pistachio({
   id: 'app-test',
   template: '/secondary.template.html',
   properties: {
-    'title': {
-      value: 'Cabecera'
-    },
+    'title': {},
     'subtitle': {
       value: 'Probando distintas cab'
     }
@@ -17,6 +15,6 @@ var pistachio = new Pistachio({
     }
   },
   connectedCallback: () => {
-    alert("Connected!");
+    alert("ya estoy cargado");
   }
 });
