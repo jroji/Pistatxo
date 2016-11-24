@@ -3,7 +3,7 @@
 var pistachio = new Pistachio({
   id: 'app-test',
   template: '/secondary.template.html',
-  bindings: {
+  properties: {
     'title': {
       value: 'Cabecera'
     },
@@ -15,5 +15,8 @@ var pistachio = new Pistachio({
     changeString: function (x) {
       return x + "HOLA";
     }
+  },
+  connectedCallback: () => {
+    alert("Connected!");
   }
 });

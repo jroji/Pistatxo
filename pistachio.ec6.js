@@ -2,9 +2,33 @@ class Pistachio {
 
   constructor(properties) {
 
+    this._DOM = {};
+
     const _fetchOptions= {
       headers: {
         "Content-Type": "text/plain"
+      }
+    };
+
+    const _parseNode = (array, element, level = 0) => {
+      let attributes = [];
+
+      for(let attr of element.attributes) {
+        attributes.push({attr: attr.name, value: attr.nodeValue});
+      }
+
+      array.push({
+        'attr': attributes,
+        'tag': element.tagName,
+        'children': [],
+        'content': element.innerHTML,
+        'level': level
+      });
+
+      if(element.children.length != 0) {
+        for(let child of element.children){
+          _parseNode(array[array.length - 1].children, child, level + 1);
+        }
       }
     };
 
@@ -13,22 +37,51 @@ class Pistachio {
      */
     const _HTMLparser = (htmlContent, properties, pipes) => {
 
-      let regex = /{{.+}}/gi, result, bindings = [];
-      /**
-       * TODO: Replace with forEach ?
-       */
-      while ( (result = regex.exec(htmlContent)) ) {
-        result = result[0].replace('{{','').replace('}}','');
-        result = result.split('|');
-        bindings.push({
-          index: result.index,
-          property: result[0].trim(),
-          pipe: result[1] != null ? result[1].trim() : null
-        });
-      };
-      return _insertHTML(htmlContent, bindings, properties, pipes);
+      let template = document.createElement('template');
+      let DOM = [];
+
+      template.innerHTML = htmlContent;
+      _parseNode(DOM, template.content.firstChild);
+
+      this._DOM = DOM;
+      return _createHTML(DOM, properties, pipes);
+
     };
 
+    const _replaceBindings = (a, properties, pipes) => {
+
+      let result = a.replace('{{','').replace('}}','');
+      result = result.split('|');
+
+      let pipe = result[1] ? pipes[result[1].trim()] : null;
+      let value = properties[result[0].trim()].value;
+
+      return pipe ? pipe(value) : value;
+    };
+
+    const _createHTML = (DOM, properties, pipes) => {
+      let template = document.createElement('template');
+
+      const _insertNode = (template, elem)=> {
+        let element = document.createElement(elem.tag);
+        elem.attr.forEach( (attr) => element.setAttribute(attr.attr, attr.value));
+
+        template.appendChild(element);
+        if(elem.children.length > 0) {
+          elem.children.forEach( d => { _insertNode(element,d) });
+        }
+        else {
+          let parsedContent = elem.content;
+          element.innerHTML = parsedContent.replace(/{{.+}}/gi, a => _replaceBindings(a,properties, pipes));
+        }
+      }
+
+      _insertNode(template.content, DOM[0]);
+
+      return template;
+
+
+    }
     /**
      * replace the bindings syntax and define the new component
      */
@@ -48,23 +101,6 @@ class Pistachio {
 
       return htmlContent;
     };
-
-    /*
-    const _insertHTML = (htmlContent, bindings, props, pipes) => {
-
-      bindings.forEach(d => {
-        let result = d.pipe ? pipes[d.pipe](props[d.property].value) : props[d.property].value;
-        let replaceText = d.pipe && result ? '{{' + d.property +' | '+ d.pipe +'}}' : '{{' + d.property +'}}';
-        if(d.pipe && !result) {
-          console.warn('The pipe function' + d.pipe + ' is not return value of type String or Number');
-        }
-
-        htmlContent = htmlContent.replace(replaceText, result);
-
-      });
-      return htmlContent;
-    };
-    */
 
     /**
      * Fetch the template from properties.url and call_HTMLparser function
@@ -86,14 +122,11 @@ class Pistachio {
       customElements.define(properties.id,
 
         class extends HTMLElement{
+
           constructor() {
             super();
 
-            this.properties = {};
-            this.pipes = {};
-
-            Object.assign(this.properties, properties.bindings);
-            Object.assign(this.pipes, properties.pipes);
+            Object.assign(this, properties);
 
             Object.keys(this.properties).forEach((element) => {
               var data = this.getAttribute(element);
@@ -102,22 +135,27 @@ class Pistachio {
               }
             });
 
-             let templateReader = _getTemplate(properties.template);
+            let templateReader = _getTemplate(properties.template);
 
             templateReader.onloadend = () => {
               var content = _HTMLparser(templateReader.result, this.properties, this.pipes);
               // Create a shadow root
               let shadow = this.attachShadow({mode: this.properties.shadowMode || 'open'});
-
-              /**
-               * TODO: Replace with template tag
-               */
-              let template = document.createElement('template');
-              template.innerHTML = content;
               // Add the html content to the shadow root.
-              shadow.appendChild(template.content);
-
+              shadow.appendChild(content.content);
             }
+
+          }
+
+         static get observedAttributes() { return Object.keys(properties.properties); }
+
+          connectedCallback(){
+            this.connectedCallback();
+          };
+
+          attributeChangedCallback(attr, oldValue, newValue) {
+            /** TODO: CHANGE DETECTION LISTENER **/
+            console.info("attr changed => ", attr, newValue);
           }
 
         });
