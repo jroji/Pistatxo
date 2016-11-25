@@ -14,7 +14,23 @@ var pistachio = new Pistachio({
       return x + "HOLA";
     }
   },
-  connectedCallback: () => {
-    alert("ya estoy cargado");
-  }
+  connectedCallback: () => {}
+});
+
+
+var pistachio = new Pistachio({
+    id: 'app-foo',
+    template: '/main.template.html',
+    properties: {
+      'title': {},
+      'subtitle': {
+        value: 'Probando distintas cab'
+      }
+    },
+    pipes:{
+      changeString: function (x) {
+        return x + "HOLA";
+      }
+    },
+    connectedCallback: () => {}
 });

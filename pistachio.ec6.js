@@ -133,6 +133,7 @@ class Pistachio {
           attributeChangedCallback(attr, oldValue, newValue) {
             /** TODO: CHANGE DETECTION LISTENER **/
             console.info("attr changed => ", attr, newValue);
+            /** TODO: Update this.properties values **/
           }
 
           /** Overwrite lifecycle events with developer custom functions **/

@@ -7,9 +7,15 @@
 <body>
 
   <app-test title="cabecera" subtitle="probando distintas cabeceras"></app-test>
+  <app-foo title="cabecera" subtitle="probando distintas cabeceras"></app-foo>
 
-  <script src="/pistachio.ec6.js"></script>
-  <script src="/pistachio.controller.js"></script>
+  <script src="/pistachio.ec6.js" defer></script>
+  <script src="/pistachio.controller.js" defer></script>
 
+  <script>
+    setTimeout(() => {
+      document.querySelector('app-foo').setAttribute("title", "hola");
+    },1000)
+  </script>
 </body>
 </html>
