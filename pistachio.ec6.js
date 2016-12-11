@@ -15,39 +15,33 @@ class Pistachio {
         });
       }
 
-
-      array.push({
+      let obj = {
         'attr': attributes,
         'tag': element.tagName,
         'children': [],
         'content': element.innerHTML,
         'level': level,
         'route': route
-      });
+      };
 
-      console.log("-----");
-      if(element.children.length != 0) {
-        let matches = {};
-        for(let index = 0; index < element.children.length; index++){
-          let child = element.children[index];
-          for(let binding of Object.keys(properties)) {
-            if(properties[binding].path == null){
-              let reg = new RegExp('{{[\s]*' + binding +'[\s]*(|[\s\S])*?}}','g');
-              console.log(child.innerHTML);
-              console.log(child.innerHTML.match(reg));
-              console.log(matches);
-              if( child.innerHTML.match(reg) == null ) {
-                matches[binding] = matches[binding] != null ? matches[binding] + 1 : 1;
-                if(matches[binding] > 1){
-                  properties[binding].path = array[array.length-1].route;
-                }
+      array.push(obj);
+
+      let matches = {};
+      for(let index = 0; index < element.children.length; index++){
+        let child = element.children[index];
+        for(let binding of Object.keys(properties)) {
+          if(properties[binding].path != null){
+            let reg = new RegExp('{{[\s]*' + binding +'[\s]*(|[\s\S])*?}}','g');
+            if( child.innerHTML.match(reg) != null ) {
+              matches[binding] = matches[binding] != null ? matches[binding] + 1 : 1;
+              if(matches[binding] > 1){
+                properties[binding].path = obj.route;
               }
             }
           }
-          _parseNode(array[array.length-1].children, child, properties, level++, `${route}[${index}]`);
         }
+        _parseNode(obj.children, child, properties, level++, `${route}[${index}]`);
       }
-      console.log(properties);
     };
 
     /**
@@ -110,65 +104,57 @@ class Pistachio {
       let reader = new FileReader();
       fetch(template).then(template => {
         template.blob().then(response => {
-          reader.readAsBinaryString(response);
-        });
-      });
+        reader.readAsBinaryString(response);
+    });
+    });
       return reader;
     }
 
     /**
      * Create and define the custom element using the specified properties
      */
-      customElements.define(properties.id,
+    customElements.define(properties.id,
 
-        class extends HTMLElement{
+      class extends HTMLElement{
 
-          constructor() {
-            super();
+        constructor() {
+          super();
 
-            Object.assign(this, properties);
+          Object.assign(this, properties);
 
-            Object.keys(this.properties).forEach((element) => {
-              var data = this.getAttribute(element);
-              if( data != null ) {
-                this.properties[element].value = data;
-              }
-            });
-
-            let templateReader = _getTemplate(properties.template);
-
-            templateReader.onloadend = () => {
-              var content = _HTMLparser(templateReader.result, this.properties, this.pipes);
-              /** Create a shadow root **/
-              let shadow = this.attachShadow({mode: this.properties.shadowMode || 'open'});
-              /** Add the html content to the shadow root.**/
-              shadow.appendChild(content.content);
-            }
-
+          Object.keys(this.properties).forEach((element) => {
+            var data = this.getAttribute(element);
+          if( data != null ) {
+            this.properties[element].value = data;
           }
-
-          /** Define observedAttributes by defined properties **/
-          static get observedAttributes() { return Object.keys(properties.properties); }
-
-          attributeChangedCallback(attr, oldValue, newValue) {
-            if(oldValue){
-              console.log(_DOM);
-              console.info("attr changed => ", attr, newValue, oldValue);
-            }
-          }
-
-          /** Overwrite lifecycle events with developer custom functions **/
-          disconnectedCallback(){
-            this.disconnectedCallback;
-          };
-
-          connectedCallback(){
-            this.connectedCallback();
-          };
-
-          adoptedCallback(oldDocument, newDocument){
-            this.adoptedCallback(oldDocument, newDocument);
-          };
         });
-    }
+
+          let templateReader = _getTemplate(properties.template);
+
+          templateReader.onloadend = () => {
+            var content = _HTMLparser(templateReader.result, this.properties, this.pipes);
+            /** Create a shadow root **/
+            let shadow = this.attachShadow({mode: this.properties.shadowMode || 'open'});
+            /** Add the html content to the shadow root.**/
+            shadow.appendChild(content.content);
+          }
+
+        }
+
+        /** Define observedAttributes by defined properties **/
+        static get observedAttributes() { return Object.keys(properties.properties); }
+
+        attributeChangedCallback(attr, oldValue, newValue) {
+        }
+
+        /** Overwrite lifecycle events with developer custom functions **/
+        disconnectedCallback(){
+          this.disconnectedCallback;
+        };
+
+        adoptedCallback(oldDocument, newDocument){
+          this.adoptedCallback(oldDocument, newDocument);
+        };
+      });
+  }
 }
