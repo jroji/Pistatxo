@@ -2,9 +2,9 @@ class Pistachio {
 
   constructor(properties) {
 
-    this._DOM = {};
+    let _DOM = {};
 
-    const _parseNode = (array, element, level = 0) => {
+    const _parseNode = (array, element, properties, level = 0, route = '[0]') => {
 
       let attributes = [];
 
@@ -15,19 +15,39 @@ class Pistachio {
         });
       }
 
+
       array.push({
         'attr': attributes,
         'tag': element.tagName,
         'children': [],
         'content': element.innerHTML,
-        'level': level
+        'level': level,
+        'route': route
       });
 
+      console.log("-----");
       if(element.children.length != 0) {
-        for(let child of element.children){
-          _parseNode(array[array.length - 1].children, child, level++);
+        let matches = {};
+        for(let index = 0; index < element.children.length; index++){
+          let child = element.children[index];
+          for(let binding of Object.keys(properties)) {
+            if(properties[binding].path == null){
+              let reg = new RegExp('{{[\s]*' + binding +'[\s]*(|[\s\S])*?}}','g');
+              console.log(child.innerHTML);
+              console.log(child.innerHTML.match(reg));
+              console.log(matches);
+              if( child.innerHTML.match(reg) == null ) {
+                matches[binding] = matches[binding] != null ? matches[binding] + 1 : 1;
+                if(matches[binding] > 1){
+                  properties[binding].path = array[array.length-1].route;
+                }
+              }
+            }
+          }
+          _parseNode(array[array.length-1].children, child, properties, level++, `${route}[${index}]`);
         }
       }
+      console.log(properties);
     };
 
     /**
@@ -39,9 +59,9 @@ class Pistachio {
       let DOM = [];
 
       template.innerHTML = htmlContent;
-      _parseNode(DOM, template.content.firstChild);
+      _parseNode(DOM, template.content.firstChild, properties);
 
-      this._DOM = DOM;
+      _DOM = DOM;
       return _createHTML(DOM, properties, pipes);
 
     };
@@ -131,9 +151,10 @@ class Pistachio {
           static get observedAttributes() { return Object.keys(properties.properties); }
 
           attributeChangedCallback(attr, oldValue, newValue) {
-            /** TODO: CHANGE DETECTION LISTENER **/
-            console.info("attr changed => ", attr, newValue);
-            /** TODO: Update this.properties values **/
+            if(oldValue){
+              console.log(_DOM);
+              console.info("attr changed => ", attr, newValue, oldValue);
+            }
           }
 
           /** Overwrite lifecycle events with developer custom functions **/
