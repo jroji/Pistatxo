@@ -1,19 +1,22 @@
 'use strict';
 
-var pistachio = new Pistachio({
+var pistachio = Pistachio({
   id: 'app-test',
   template: '/secondary.template.html',
-  bindings: {
-    'title': {
-      value: 'Cabecera'
-    },
+  properties: {
+    'title': {},
     'subtitle': {
       value: 'Probando distintas cab'
     }
   },
   pipes:{
-    changeString: function (x) {
+    changeString: (x) => {
       return x + "HOLA";
     }
+  },
+  connectedCallback: function() {
+    setInterval(() => {
+      this.setAttribute("subtitle", Math.random());
+    }, 1);
   }
 });
