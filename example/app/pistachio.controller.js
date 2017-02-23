@@ -1,8 +1,10 @@
 'use strict';
 
-var pistachio = Pistachio({
+import Pistachio from '../../src/pistachio.ec6';
+
+var app = Pistachio({
   id: 'app-test',
-  template: '/secondary.template.html',
+  template: '../app/template.html',
   properties: {
     'title': {},
     'subtitle': {
@@ -15,8 +17,5 @@ var pistachio = Pistachio({
     }
   },
   connectedCallback: function() {
-    setInterval(() => {
-      this.setAttribute("subtitle", Math.random());
-    }, 1);
   }
 });
